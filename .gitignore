@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.env
+.env.*
+!.env.example
+/data/
+/backend/data/
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-shm
+*.db-wal
+# Android
+.gradle/
+.idea/
+local.properties
+**/build/
+*.apk
+*.aab
+*.jks
+*.keystore
+# Runtime
+.run/
+*.log
+.DS_Store
+
+# .NET MAUI
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+*.nupkg
+*.msix
+*.msixbundle
+
+# Phone host credentials and runtime state
+/token.txt
+**/token.txt
+/server/logs/
+/server/.run/
+# Disposable cross-repository integration checkout
+.integration/
