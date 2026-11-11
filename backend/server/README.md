@@ -88,8 +88,6 @@ For Tailscale, connect to the phone's Tailscale IP on port 8022 with its Termux
 username. For Cloudflare, keep using your existing `homessh` SSH configuration.
 
 Atlas starts through its own `50-atlas-api` boot hook and supervised API service.
-The host scripts do not start or stop the AI application. APK recovery buttons
-remain follow-up work, and must understand which mechanism owns the tunnel before
-attempting recovery.
+The host scripts do not start or stop the AI application. The independent management app uses the SSH bridge for status, logs and API control. Recovery uses this home-script tunnel mechanism and starts a connector only when no cloudflared process is present. See [app setup](../../mobile/README.md).
 
 Reference: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/run-parameters/

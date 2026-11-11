@@ -1,0 +1,24 @@
+@inherits ManagementPage
+<section><small class="eyebrow">BACKUP ACCESS</small><h1>Connections</h1><p>Use the server phone's Tailscale address and Termux SSH credentials.</p>
+    <article class="card"><div class="form-grid">
+        <label>Tailscale IPv4<input @bind="host" disabled="@State.Busy" placeholder="100.x.x.x" autocapitalize="none" spellcheck="false" /></label>
+        <label>SSH port<input type="number" min="1" max="65535" @bind="port" disabled="@State.Busy" /></label>
+        <label>Termux username<input @bind="username" disabled="@State.Busy" autocapitalize="none" spellcheck="false" /></label>
+        <label>SSH password<input type="password" @bind="password" disabled="@State.Busy" autocomplete="off" /></label>
+        <label>SSH host fingerprint<input @bind="fingerprint" disabled="@State.Busy" placeholder="SHA256:…" autocapitalize="none" spellcheck="false" /></label>
+        <label>Management checkout path<input @bind="root" disabled="@State.Busy" autocapitalize="none" spellcheck="false" /></label>
+        <label class="check"><input type="checkbox" @bind="remember" disabled="@State.Busy" /> Remember with device secure storage</label>
+        <button class="primary" disabled="@State.Busy" @onclick="Save">Save connection</button>
+    </div></article>
+    <article class="card"><h2>Verify the server identity</h2><p>On the server phone, run the following and copy the SHA256 fingerprint. Compare it directly before saving.</p><pre>ssh-keygen -lf "$PREFIX/etc/ssh/ssh_host_ed25519_key.pub"</pre><p>Install this repository and its Python environment at the checkout path above. Tailscale must be connected on this device too.</p></article>
+</section>
+@code {
+    private string host = "", username = "u0_a252", password = "", fingerprint = "", root = "/data/data/com.termux/files/home/server/apps/Server-management";
+    private int port = 8022;
+    private bool remember = true;
+    protected override void OnInitialized()
+    {
+        if(State.Connection is { } value) { host = value.Host; port = value.Port; username = value.Username; password = value.Password; fingerprint = value.Fingerprint; root = value.ManagerRoot; }
+    }
+    private Task Save() => State.SaveAsync(new(host.Trim(), port, username.Trim(), password, fingerprint.Trim(), root.Trim()), remember);
+}

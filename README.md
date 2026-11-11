@@ -79,6 +79,4 @@ ATLAS_TEST_ROOT=/absolute/atlas-agent ATLAS_PYTHON=/absolute/atlas-agent/.venv/b
 These integration tests start and stop disposable API instances. Run them on a
 development checkout with no production API running. CI checks both repositories.
 
-The server-management mobile application, its recovery buttons and any dedicated
-management API are not implemented yet. This repository contains the existing
-management backend tools, scripts and tests moved out of Atlas.
+The independent [Server-management app](mobile/README.md) is under `mobile/`. It uses the fixed `backend.server.mobile_bridge` commands through Tailscale SSH, including when the Atlas API is unavailable. No separate public management HTTP endpoint is required.

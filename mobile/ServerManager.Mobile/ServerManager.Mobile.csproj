@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+    <OutputType>Exe</OutputType><RootNamespace>ServerManager.Mobile</RootNamespace><UseMaui>true</UseMaui><SingleProject>true</SingleProject>
+    <EnableDefaultCssItems>false</EnableDefaultCssItems><ApplicationTitle>Server management</ApplicationTitle><ApplicationId>com.mletsoalo.servermanager</ApplicationId>
+    <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion><ApplicationVersion>1</ApplicationVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+    <WindowsPackageType>None</WindowsPackageType>
+  </PropertyGroup>
+  <ItemGroup>
+    <MauiIcon Include="Resources/AppIcon/appicon.svg" Color="#0C1220" />
+    <MauiSplashScreen Include="Resources/Splash/splash.svg" Color="#0C1220" BaseSize="128,128" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
+    <ProjectReference Include="../ServerManager.UI/ServerManager.UI.csproj" />
+  </ItemGroup>
+</Project>
