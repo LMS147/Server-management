@@ -50,3 +50,15 @@ class MobileBridgeTests(unittest.TestCase):
                 text = bridge.read_logs("tunnel")
             self.assertEqual(3, text.count("[redacted]"))
             self.assertNotIn("secret", text)
+
+    def test_process_metrics_are_null_when_android_blocks_proc(self):
+        with patch.object(Path, "read_text", side_effect=PermissionError):
+            self.assertEqual((None, None), bridge.process_metrics(1234))
+        self.assertEqual((None, None), bridge.process_metrics(None))
+
+    def test_status_is_compatible_with_older_health_payloads(self):
+        with patch.object(bridge, "probe", return_value=(True, {"pid": 1234})), patch.object(bridge, "process_running", return_value=True), patch.object(bridge, "process_metrics", return_value=(None, None)):
+            data = bridge.status()
+        self.assertTrue(data["api_healthy"])
+        self.assertIsNone(data["api_version"])
+        self.assertIsNone(data["api_uptime_seconds"])

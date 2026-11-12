@@ -72,3 +72,14 @@ The Server management app workflow builds Android and Windows, and uploads the
 for this new app must be configured separately from Atlas before distribution.
 Physical-device validation must cover secure storage, SSH host verification,
 keyboard/Back, reconnecting networks, service actions and interrupted operations.
+
+## Reference visual design (1.1.0)
+
+The five pages use the supplied near-black/green design, SVG icons, resource bars,
+service cards, a terminal-style log viewer, and fixed bottom navigation. Display
+names are editable on Connections. Live log updates are opt-in and refresh every
+12 seconds while the Logs page and app are active. Copy uses the native clipboard.
+Settings opens official documentation, source and release pages. Status alerts
+are persisted in-app banners for changes observed after checks; they are not
+background push notifications. API PID, process CPU/RAM, version and uptime come
+from the SSH bridge; Android-restricted or older-backend values remain unavailable.

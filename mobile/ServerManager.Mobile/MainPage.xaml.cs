@@ -7,6 +7,9 @@ public partial class MainPage : ContentPage
     public MainPage(ManagementState state)
     {
         InitializeComponent(); this.state = state;
+        state.AppVersion = $"{AppInfo.Current.VersionString} ({AppInfo.Current.BuildString})";
+        state.OpenLink = url => Launcher.Default.OpenAsync(url);
+        state.CopyText = text => Clipboard.Default.SetTextAsync(text);
         state.Confirm = message => MainThread.InvokeOnMainThreadAsync(() => DisplayAlertAsync("Confirm service action", message, "Continue", "Cancel"));
     }
     protected override bool OnBackButtonPressed()

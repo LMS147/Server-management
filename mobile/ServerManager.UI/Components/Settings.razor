@@ -1,5 +1,18 @@
 @inherits ManagementPage
-<section><small class="eyebrow">THIS DEVICE</small><h1>Settings</h1>
-    <article class="card"><h2>Saved connection</h2><p>@(State.Connection is null ? "No connection configured" : $"{State.Connection.Username}@{State.Connection.Host}:{State.Connection.Port}")</p><button class="danger" disabled="@State.Busy" @onclick="State.ForgetAsync">Forget connection…</button></article>
-    <article class="card"><h2>Server management 1.0.0</h2><p>Independent host controls for your Termux server. Atlas chat and AI features are provided by the separate Atlas app.</p><p>Operations run only when requested. Logs and host status remain in memory on this device.</p></article>
+<section>
+    <div class="page-heading"><div><span class="eyebrow">PREFERENCES</span><h1>Settings</h1></div></div>
+    <div class="section-heading"><h2>App</h2></div>
+    <div class="list-card">
+        <div class="settings-row"><span class="icon-tile"><ManagerIcon Name="alert" /></span><span class="grow"><strong>Status alerts</strong><small>Show service changes after checks</small></span><button class="toggle @(State.StatusAlerts ? "on" : "")" role="switch" aria-checked="@State.StatusAlerts" aria-label="Status alerts" @onclick="State.ToggleStatusAlerts"><span></span></button></div>
+        <button class="settings-row" disabled="@State.Busy" @onclick="State.OpenUpdatesAsync"><span class="icon-tile"><ManagerIcon Name="refresh" /></span><span class="grow"><strong>Check for updates</strong><small>View published releases</small></span><ManagerIcon Name="chevron" /></button>
+    </div>
+    <div class="section-heading"><h2>About</h2></div>
+    <div class="list-card">
+        <div class="settings-row"><span class="icon-tile"><ManagerIcon Name="info" /></span><span class="grow"><strong>Server management</strong><small>Version @State.AppVersion</small></span></div>
+        <button class="settings-row" disabled="@State.Busy" @onclick="State.OpenDocumentationAsync"><span class="icon-tile"><ManagerIcon Name="logs" /></span><span class="grow"><strong>Documentation</strong><small>Setup and troubleshooting</small></span><ManagerIcon Name="chevron" /></button>
+        <button class="settings-row" disabled="@State.Busy" @onclick="State.OpenSourceAsync"><span class="icon-tile"><ManagerIcon Name="github" /></span><span class="grow"><strong>Source code</strong><small>View project on GitHub</small></span><ManagerIcon Name="chevron" /></button>
+    </div>
+    <div class="section-heading danger-heading"><h2>Danger zone</h2></div>
+    <div class="danger-card"><div class="grow"><strong>Remove connection details</strong><p>Delete saved credentials and server configuration from this device.</p></div><button class="danger" disabled="@State.Busy" @onclick="State.ForgetAsync"><ManagerIcon Name="trash" /> Remove</button></div>
+    <p class="made-for">Made for your server · Local-first and private</p>
 </section>

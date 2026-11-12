@@ -1,6 +1,32 @@
 @inherits ManagementPage
-<section><small class="eyebrow">DIAGNOSTICS</small><h1>Logs</h1><p>Load recent entries through the backup connection.</p>
-    <div class="actions"><label>Log source<select @bind="source" disabled="@State.Busy"><option value="api">Atlas API</option><option value="tunnel">Cloudflare</option><option value="startup">Host startup</option></select></label><button class="primary" disabled="@State.Busy" @onclick="Load">Load logs</button></div>
-    <pre class="logs" aria-label="Server log entries">@State.Logs</pre><p class="muted">Up to 100 recent lines per file. Configured credentials are redacted by the backend. Review logs before sharing.</p>
+@implements IAsyncDisposable
+<section>
+    <div class="page-heading"><div><span class="eyebrow">DIAGNOSTICS</span><h1>Recent logs</h1></div><button class="icon-button" disabled="@State.Busy" aria-label="Refresh selected log" @onclick="Load"><ManagerIcon Name="refresh" /></button></div>
+    <div class="log-tabs" role="tablist" aria-label="Log source">
+        @foreach(var kind in Sources){<button role="tab" aria-selected="@(source == kind)" disabled="@State.Busy" class="@(source == kind ? "selected" : "")" @onclick="() => Select(kind)">@(kind == "api" ? "API" : kind == "tunnel" ? "Tunnel" : "Startup")</button>}
+    </div>
+    <div class="terminal-card"><div class="terminal-heading"><span class="terminal-dots"><i></i><i></i><i></i></span><span>@(DisplaySource == "api" ? "api.log" : DisplaySource == "tunnel" ? "cloudflared.log" : "startup.log")</span><button class="text-button" aria-label="Copy displayed logs" @onclick="State.CopyLogsAsync"><ManagerIcon Name="copy" /></button></div><div class="logs" role="log" aria-label="Server log entries">@foreach(var line in State.Logs.Split('\n')) { var match = LevelPattern.Match(line); <div class="log-line">@if(match.Success){<span class="log-prefix">@line[..match.Index]</span><span class="log-level @Severity(match.Value)">@match.Value</span><span>@line[(match.Index + match.Length)..]</span>}else{@line}</div> }</div><div class="terminal-prompt" aria-hidden="true">› <span></span></div></div>
+    <div class="log-footer"><label class="live-control"><input type="checkbox" @bind="live" /><span class="status-dot @(live ? "good" : "")"></span> Live updates @(live ? "· 12s" : "off")</label><small>@LineCount lines displayed</small></div>
+    <p class="helper">Updates run while this page is active. Configured credentials are redacted; review logs before sharing.</p>
 </section>
-@code { private string source = "api"; private Task Load() => State.RunAsync("logs-" + source); }
+@code {
+    private static readonly System.Text.RegularExpressions.Regex LevelPattern = new(@"\b(INFO|WARN(?:ING)?|ERROR|CRITICAL|DEBUG|FATAL)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    private static string Severity(string level) => level.ToUpperInvariant() switch { "ERROR" or "CRITICAL" or "FATAL" => "log-error", "WARN" or "WARNING" => "log-warning", _ => "log-info" };
+    private static readonly string[] Sources = ["api", "tunnel", "startup"];
+    private readonly CancellationTokenSource stop = new();
+    private string source = "api";
+    private bool live;
+    private string DisplaySource => string.IsNullOrEmpty(State.LogSource) ? source : State.LogSource;
+    private Task? polling;
+    private int LineCount => string.IsNullOrEmpty(State.Logs) ? 0 : State.Logs.Split('\n').Length;
+    protected override void OnInitialized() => polling = Poll();
+    private Task Load() => State.RunAsync("logs-" + source);
+    private async Task Select(string value) { source = value; await Load(); }
+    private async Task Poll()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(12));
+        try { while(await timer.WaitForNextTickAsync(stop.Token)) { if(live && State.IsActive && !State.Busy && State.Connection is not null) await InvokeAsync(Load); } }
+        catch(OperationCanceledException) when(stop.IsCancellationRequested) { }
+    }
+    public async ValueTask DisposeAsync() { stop.Cancel(); if(polling is not null) await polling; stop.Dispose(); }
+}

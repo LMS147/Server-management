@@ -1,11 +1,10 @@
 @inject ManagementState State
 @implements IDisposable
 <div class="shell">
-    <header><div class="brand-mark" aria-hidden="true">SM</div><div><strong>Server management</strong><small>Your phone. Your services.</small></div><span class="badge @(State.Reachable ? "good" : "")">@(State.Busy ? "Working…" : State.Reachable ? "SSH reachable" : "Not checked / unavailable")</span></header>
     <main>
         @if(State.Error is not null){<div class="alert error" role="alert">@State.Error</div>}
         @if(State.Notice is not null){<div class="alert" role="status">@State.Notice</div>}
-        @if(State.Busy){<p role="status">Contacting the server. Service operations may take up to 95 seconds.</p>}
+        @if(State.Busy){<div class="working" role="status"><span class="status-dot pulse"></span> Contacting server…</div>}
         @switch(State.Page)
         {
             case "Dashboard": <Dashboard State="State" /> break;
@@ -15,17 +14,17 @@
             case "Settings": <Settings State="State" /> break;
         }
     </main>
-    <nav aria-label="Main navigation">
+    <nav aria-label="Main navigation"><div class="nav-inner">
         @foreach(var page in Pages)
         {
-            <button disabled="@State.Busy" class="@(State.Page == page ? "active" : "")" aria-current="@(State.Page == page ? "page" : null)" @onclick="() => State.Navigate(page)"><span aria-hidden="true">@Icon(page)</span>@(page)</button>
+            <button disabled="@State.Busy" class="@(State.Page == page ? "active" : "")" aria-current="@(State.Page == page ? "page" : null)" @onclick="() => State.Navigate(page)"><ManagerIcon Name="@Icon(page)" /><span>@(page == "Connections" ? "Connect" : page)</span></button>
         }
-    </nav>
+    </div></nav>
 </div>
 @code {
     private static readonly string[] Pages = ["Dashboard", "Services", "Connections", "Logs", "Settings"];
     protected override async Task OnInitializedAsync() { State.Changed += OnChanged; await State.InitializeAsync(); }
     private void OnChanged() => _ = InvokeAsync(StateHasChanged);
     public void Dispose() => State.Changed -= OnChanged;
-    private static string Icon(string page) => page switch { "Dashboard" => "▦", "Services" => "⚙", "Connections" => "⇄", "Logs" => "≡", _ => "☰" };
+    private static string Icon(string page) => page switch { "Dashboard" => "dashboard", "Services" => "server", "Connections" => "connect", "Logs" => "logs", _ => "settings" };
 }

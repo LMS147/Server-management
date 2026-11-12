@@ -41,6 +41,40 @@ public sealed class RecoveryTests
         state.Confirm = _ => Task.FromResult(true); await state.ForgetAsync();
         Assert.Null(store.Value); Assert.Null(state.Connection); Assert.Equal("No connection.", state.Logs);
     }
+    [Fact] public void StatusAlertPreferencePersists()
+    {
+        var preferences = new PreferencesStore { StatusAlerts = false };
+        var state = new ManagementState(new FakeClient(), new Store(), preferences);
+        Assert.False(state.StatusAlerts);
+        state.ToggleStatusAlerts();
+        Assert.True(state.StatusAlerts);
+        Assert.True(preferences.StatusAlerts);
+    }
+    [Fact] public async Task NativeActionsUseDisplayedLogsAndOfficialLinks()
+    {
+        var state = new ManagementState(new FakeClient(), new Store());
+        await state.SaveAsync(Valid, true);
+        await state.RunAsync("logs-tunnel");
+        string? copied = null, opened = null;
+        state.CopyText = text => { copied = text; return Task.CompletedTask; };
+        state.OpenLink = url => { opened = url; return Task.FromResult(true); };
+        await state.CopyLogsAsync();
+        Assert.Equal("example log", copied);
+        Assert.Equal("tunnel", state.LogSource);
+        await state.OpenUpdatesAsync();
+        Assert.Equal("https://github.com/LMS147/Server-management/releases", opened);
+    }
+    [Fact] public void OlderSavedConnectionsKeepADefaultDisplayName()
+    {
+        var json = System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(Valid))!;
+        json.AsObject().Remove("Name");
+        var restored = System.Text.Json.JsonSerializer.Deserialize<Connection>(json.ToJsonString());
+        Assert.Equal("Atlas server", restored!.Name);
+    }
+    private sealed class PreferencesStore : IAppPreferences
+    {
+        public bool StatusAlerts { get; set; }
+    }
     private sealed class Store : IConnectionStore
     {
         public Connection? Value;

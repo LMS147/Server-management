@@ -1,24 +1,26 @@
 @inherits ManagementPage
-<section><small class="eyebrow">BACKUP ACCESS</small><h1>Connections</h1><p>Use the server phone's Tailscale address and Termux SSH credentials.</p>
-    <article class="card"><div class="form-grid">
-        <label>Tailscale IPv4<input @bind="host" disabled="@State.Busy" placeholder="100.x.x.x" autocapitalize="none" spellcheck="false" /></label>
-        <label>SSH port<input type="number" min="1" max="65535" @bind="port" disabled="@State.Busy" /></label>
-        <label>Termux username<input @bind="username" disabled="@State.Busy" autocapitalize="none" spellcheck="false" /></label>
-        <label>SSH password<input type="password" @bind="password" disabled="@State.Busy" autocomplete="off" /></label>
-        <label>SSH host fingerprint<input @bind="fingerprint" disabled="@State.Busy" placeholder="SHA256:…" autocapitalize="none" spellcheck="false" /></label>
-        <label>Management checkout path<input @bind="root" disabled="@State.Busy" autocapitalize="none" spellcheck="false" /></label>
-        <label class="check"><input type="checkbox" @bind="remember" disabled="@State.Busy" /> Remember with device secure storage</label>
-        <button class="primary" disabled="@State.Busy" @onclick="Save">Save connection</button>
-    </div></article>
-    <article class="card"><h2>Verify the server identity</h2><p>On the server phone, run the following and copy the SHA256 fingerprint. Compare it directly before saving.</p><pre>ssh-keygen -lf "$PREFIX/etc/ssh/ssh_host_ed25519_key.pub"</pre><p>Install this repository and its Python environment at the checkout path above. Tailscale must be connected on this device too.</p></article>
+<section>
+    <div class="page-heading"><div><span class="eyebrow">REMOTE ACCESS</span><h1>Connections</h1></div>@if(State.Connection is not null){<span class="saved-label"><ManagerIcon Name="check" /> Saved</span>}</div>
+    <div class="security-banner"><ManagerIcon Name="shield" /><div><strong>Secure connection</strong><small>Saved credentials are encrypted on this device.</small></div></div>
+    <div class="section-heading"><h2>Server details</h2></div>
+    <form class="connection-form" @onsubmit="Save" @onsubmit:preventDefault>
+        <label class="field full"><span>Tailscale IP address</span><div class="input-wrap"><ManagerIcon Name="wifi" /><input @bind="host" disabled="@State.Busy" placeholder="100.x.x.x" autocapitalize="none" spellcheck="false" /></div></label>
+        <label class="field"><span>SSH user</span><div class="input-wrap"><ManagerIcon Name="terminal" /><input @bind="username" disabled="@State.Busy" autocapitalize="none" spellcheck="false" /></div></label>
+        <label class="field"><span>SSH password</span><div class="input-wrap"><ManagerIcon Name="key" /><input type="password" @bind="password" disabled="@State.Busy" autocomplete="off" /></div></label>
+        <label class="field full"><span>Server fingerprint</span><div class="input-wrap"><ManagerIcon Name="fingerprint" /><input @bind="fingerprint" disabled="@State.Busy" placeholder="SHA256:…" autocapitalize="none" spellcheck="false" /></div><small>Used to verify the server's identity.</small></label>
+        <label class="field full"><span>Repository path</span><div class="input-wrap"><ManagerIcon Name="github" /><input @bind="root" disabled="@State.Busy" autocapitalize="none" spellcheck="false" /></div></label>
+        <details class="advanced full"><summary>Advanced &amp; storage</summary><label class="field full"><span>Server name</span><div class="input-wrap"><ManagerIcon Name="server" /><input @bind="name" disabled="@State.Busy" maxlength="60" placeholder="Atlas server" /></div></label><label class="field"><span>SSH port</span><input type="number" min="1" max="65535" @bind="port" disabled="@State.Busy" /></label><label class="check"><input type="checkbox" @bind="remember" disabled="@State.Busy" /> Remember this connection</label><p class="helper">Verify the fingerprint on the server phone with:</p><pre>ssh-keygen -lf "$PREFIX/etc/ssh/ssh_host_ed25519_key.pub"</pre></details>
+        <button class="primary full" type="submit" disabled="@State.Busy"><ManagerIcon Name="check" /> Save connection</button>
+    </form>
+    <button class="test-connection" disabled="@(State.Busy || State.Connection is null)" @onclick='() => State.RunAsync("status")'><span><ManagerIcon Name="activity" /> Test saved connection</span><span class="inline-status @(State.Reachable ? "good" : "")"><i class="status-dot"></i>@(State.Reachable ? "Connected" : "Not checked")</span></button>
 </section>
 @code {
-    private string host = "", username = "u0_a252", password = "", fingerprint = "", root = "/data/data/com.termux/files/home/server/apps/Server-management";
+    private string name = "Atlas server", host = "", username = "u0_a252", password = "", fingerprint = "", root = "/data/data/com.termux/files/home/server/apps/Server-management";
     private int port = 8022;
     private bool remember = true;
     protected override void OnInitialized()
     {
-        if(State.Connection is { } value) { host = value.Host; port = value.Port; username = value.Username; password = value.Password; fingerprint = value.Fingerprint; root = value.ManagerRoot; }
+        if(State.Connection is { } value) { name = value.Name; host = value.Host; port = value.Port; username = value.Username; password = value.Password; fingerprint = value.Fingerprint; root = value.ManagerRoot; }
     }
-    private Task Save() => State.SaveAsync(new(host.Trim(), port, username.Trim(), password, fingerprint.Trim(), root.Trim()), remember);
+    private Task Save() => State.SaveAsync(new(host.Trim(), port, username.Trim(), password, fingerprint.Trim(), root.Trim()) { Name = string.IsNullOrWhiteSpace(name) ? "Atlas server" : name.Trim() }, remember);
 }
