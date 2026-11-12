@@ -1,0 +1,6 @@
+@inherits ManagementPage
+<section><small class="eyebrow">DIAGNOSTICS</small><h1>Logs</h1><p>Load recent entries through the backup connection.</p>
+    <div class="actions"><label>Log source<select @bind="source" disabled="@State.Busy"><option value="api">Atlas API</option><option value="tunnel">Cloudflare</option><option value="startup">Host startup</option></select></label><button class="primary" disabled="@State.Busy" @onclick="Load">Load logs</button></div>
+    <pre class="logs" aria-label="Server log entries">@State.Logs</pre><p class="muted">Up to 100 recent lines per file. Configured credentials are redacted by the backend. Review logs before sharing.</p>
+</section>
+@code { private string source = "api"; private Task Load() => State.RunAsync("logs-" + source); }

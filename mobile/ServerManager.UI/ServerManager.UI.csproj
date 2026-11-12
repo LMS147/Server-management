@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup><PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" /><ProjectReference Include="../ServerManager.Core/ServerManager.Core.csproj" /></ItemGroup>
+</Project>

@@ -1,0 +1,5 @@
+@inherits ManagementPage
+<section><small class="eyebrow">THIS DEVICE</small><h1>Settings</h1>
+    <article class="card"><h2>Saved connection</h2><p>@(State.Connection is null ? "No connection configured" : $"{State.Connection.Username}@{State.Connection.Host}:{State.Connection.Port}")</p><button class="danger" disabled="@State.Busy" @onclick="State.ForgetAsync">Forget connection…</button></article>
+    <article class="card"><h2>Server management 1.0.0</h2><p>Independent host controls for your Termux server. Atlas chat and AI features are provided by the separate Atlas app.</p><p>Operations run only when requested. Logs and host status remain in memory on this device.</p></article>
+</section>

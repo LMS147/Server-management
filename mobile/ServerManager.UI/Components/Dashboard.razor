@@ -1,0 +1,21 @@
+@inherits ManagementPage
+<section>
+    <div class="heading"><div><small class="eyebrow">PRIVATE CONTROL ROOM</small><h1>Dashboard</h1><p>Check your server through the backup connection.</p></div><button class="primary" disabled="@State.Busy" @onclick='() => State.RunAsync("status")'>Check server</button></div>
+    @if(State.Connection is null)
+    {
+        <article class="card"><h2>Connect your server phone</h2><p>Enable Tailscale on both devices, then configure Termux SSH and its verified fingerprint.</p><button @onclick='() => State.Navigate("Connections")'>Set up connection</button></article>
+    }
+    else { <p class="muted">@State.Connection.Host · SSH @State.Connection.Port</p> }
+    @if(State.Status is { } status)
+    {
+        <p class="muted">Last checked @State.LastChecked?.ToString("g") @(!State.Reachable ? "· Previous result; refresh to verify" : "")</p>
+        <div class="grid">
+            <article class="card"><small>Atlas API</small><h2>@(status.ApiHealthy ? "Healthy" : "Unavailable")</h2><p>@(status.ApiPid is { } pid ? $"Process {pid}" : "Check Services or API logs")</p></article>
+            <article class="card"><small>Cloudflare</small><h2>@(status.TunnelRunning ? "Process running" : "Stopped")</h2><p>Connector health is confirmed in Cloudflare.</p></article>
+            <article class="card"><small>Host uptime</small><h2>@(status.Host.UptimeSeconds is { } seconds ? TimeSpan.FromSeconds(seconds).ToString(@"d\d\ hh\h\ mm\m") : "Unavailable")</h2></article>
+            <article class="card"><small>Storage free</small><h2>@Bytes(status.Host.Disk.FreeBytes)</h2><p>of @Bytes(status.Host.Disk.TotalBytes)</p></article>
+            <article class="card"><small>Memory available</small><h2>@(status.Host.Ram is { } ram ? Bytes(ram.FreeBytes) : "Unavailable")</h2><p>Android may restrict host metrics.</p></article>
+        </div>
+    }
+    <article class="card recovery"><h2>Bring services back</h2><p>Start an unavailable Atlas API and a stopped tunnel using Tailscale SSH.</p><button class="primary" disabled="@(State.Busy || State.Connection is null)" @onclick='() => State.RunAsync("recover")'>Recover server</button><p class="muted">The server phone needs internet, Tailscale and Termux SSH running.</p></article>
+</section>

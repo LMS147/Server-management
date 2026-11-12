@@ -1,0 +1,48 @@
+name: Server management app
+on:
+  push:
+    paths: ['mobile/**', '.github/workflows/mobile-ci.yml']
+  pull_request:
+    paths: ['mobile/**', '.github/workflows/mobile-ci.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet test mobile/ServerManager.Core.Tests/ServerManager.Core.Tests.csproj -c Release
+      - run: dotnet run --project mobile/tests/ServerManager.VisualChecks/ServerManager.VisualChecks.csproj -c Release -- visual-results
+      - run: cp mobile/ServerManager.UI/wwwroot/manager.css visual-results/manager.css
+      - uses: actions/upload-artifact@v4
+        with:
+          name: management-rendered-pages
+          path: visual-results/**
+  native:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: '21'
+      - run: dotnet workload install maui-android maui-windows
+      - name: Install Android components
+        run: dotnet build mobile/ServerManager.Mobile/ServerManager.Mobile.csproj -t:InstallAndroidDependencies -f net10.0-android -p:AndroidSdkDirectory="$env:ANDROID_HOME" -p:AcceptAndroidSDKLicenses=True
+      - name: Build Android APK
+        run: dotnet build mobile/ServerManager.Mobile/ServerManager.Mobile.csproj -f net10.0-android -c Debug -p:AndroidPackageFormats=apk -p:EmbedAssembliesIntoApk=true
+      - name: Build Windows host
+        run: dotnet build mobile/ServerManager.Mobile/ServerManager.Mobile.csproj -f net10.0-windows10.0.19041.0 -c Debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-management-android-apk
+          path: mobile/ServerManager.Mobile/bin/Debug/net10.0-android/**/*-Signed.apk
+          if-no-files-found: error
