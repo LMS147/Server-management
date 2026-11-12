@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import socket
 import subprocess
 import time
 import sys
@@ -37,10 +38,44 @@ def host_metrics():
     return {"ram": ram, "disk": {"total_bytes": disk.total, "free_bytes": disk.free}, "uptime_seconds": uptime}
 
 
+def process_metrics(pid):
+    if not isinstance(pid, int) or pid <= 0:
+        return None, None
+    memory = None
+    cpu = None
+    try:
+        text = Path(f"/proc/{pid}/status").read_text()
+        memory = int(next(line for line in text.splitlines() if line.startswith("VmRSS:")).split()[1]) * 1024
+    except (OSError, ValueError, IndexError, StopIteration):
+        pass
+    try:
+        def ticks():
+            fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
+            return int(fields[11]) + int(fields[12])
+        first = ticks()
+        started = time.monotonic()
+        time.sleep(0.15)
+        elapsed = time.monotonic() - started
+        cpu = round(max(0, (ticks() - first) / os.sysconf("SC_CLK_TCK") / elapsed * 100), 1)
+    except (OSError, ValueError, IndexError, ZeroDivisionError):
+        pass
+    return memory, cpu
+
+
 def status():
     healthy, payload = probe()
+    pid = payload.get("pid") if healthy and payload else None
+    memory, cpu = process_metrics(pid)
+    try:
+        from backend.server.config import load_settings
+        port = load_settings().port
+    except (OSError, ValueError):
+        port = None
     return {"sampled_at": int(time.time() * 1000), "api_healthy": healthy,
-            "api_pid": payload.get("pid") if healthy and payload else None,
+            "api_pid": pid, "api_version": payload.get("version") if healthy and payload else None,
+            "api_uptime_seconds": payload.get("uptime_seconds") if healthy and payload else None,
+            "api_memory_bytes": memory, "api_cpu_percent": cpu, "api_port": port,
+            "hostname": socket.gethostname(),
             "tunnel_running": process_running("cloudflared"),
             "ssh_running": process_running("sshd"), "host": host_metrics()}
 

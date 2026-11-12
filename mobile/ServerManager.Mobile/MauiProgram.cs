@@ -11,6 +11,7 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddSingleton<IManagementClient, SshManagementClient>();
         builder.Services.AddSingleton<IConnectionStore, DeviceConnectionStore>();
+        builder.Services.AddSingleton<IAppPreferences, DeviceAppPreferences>();
         builder.Services.AddSingleton<ManagementState>();
         builder.Services.AddSingleton<MainPage>();
         return builder.Build();
